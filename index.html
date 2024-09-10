@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Precios - NUSA</title>
+    <title>Calculadora de Precios</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,19 +27,7 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        label {
-            font-weight: 500;
-        }
-        input {
-            font-size: 1rem;
-            padding: 10px;
-            width: 100%;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        input, button {
+        input, select, button {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -52,8 +40,6 @@
             color: white;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
         }
         button:hover {
             background-color: #0056b3;
@@ -61,10 +47,9 @@
         p {
             margin: 10px 0;
             text-align: center;
-            margin-bottom: 1rem;
         }
         p span {
-            font-size: 1.5rem;
+            font-size: 1.5em;
             font-weight: bold;
             color: #007BFF;
         }
@@ -75,10 +60,10 @@
         .switch-container {
             display: flex;
             align-items: center;
-            margin: 20px 0;
+            margin: 15px 0;
         }
         .switch-container label {
-            margin-right: 10px;
+            margin-right: 15px;
         }
         .switch {
             position: relative;
@@ -124,19 +109,27 @@
 <body>
     <div class="container">
         <form>
-            <label for="precio">Precio USD:</label>
+            <label for="precio">Precio:</label>
             <input type="number" id="precio" step="any" required>
 
+            <label for="moneda">Moneda:</label>
+            <select id="moneda" required>
+                <option value="USD">USD</option>
+                <option value="MXN">MXN</option>
+            </select>
+
             <div class="switch-container">
-                <label for="con_iva">Precio en USD incluye IVA?:</label>
+                <label for="con_iva">¿Precio incluye IVA?</label>
                 <label class="switch">
                     <input type="checkbox" id="con_iva">
                     <span class="slider"></span>
                 </label>
             </div>
 
-            <label for="dolar">Precio Dólar:</label>
-            <input type="number" id="dolar" step="any" required>
+            <div id="dolar-container">
+                <label for="dolar">Precio Dólar:</label>
+                <input type="number" id="dolar" step="any" required>
+            </div>
 
             <label for="ganancia">Ganancia (%):</label>
             <input type="number" id="ganancia" step="any" required>
@@ -154,6 +147,16 @@
     </div>
 
     <script>
+        document.querySelector('#moneda').addEventListener('change', function() {
+            const moneda = document.querySelector('#moneda').value;
+            const dolarContainer = document.querySelector('#dolar-container');
+            if (moneda === 'MXN') {
+                dolarContainer.style.display = 'none';
+            } else {
+                dolarContainer.style.display = 'block';
+            }
+        });
+
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -163,19 +166,27 @@
             const dolar = parseFloat(document.querySelector('#dolar').value);
             const utilidad = parseFloat(document.querySelector('#ganancia').value) / 100 + 1;
             const con_iva = document.querySelector('#con_iva').checked;
+            const moneda = document.querySelector('#moneda').value;
 
-            let precio_neto_usd = precio_lista;
+            let precio_neto = precio_lista;
             if (!con_iva) {
-                precio_neto_usd = precio_lista * iva;
+                precio_neto = precio_lista * iva;
             }
 
-            const precio_descuento = precio_neto_usd * (1 - descuento);
-            const form_precio_bruto = (precio_descuento * dolar) * utilidad;
+            if (moneda === 'USD') {
+                precio_neto *= dolar;
+            }
+
+            const precio_descuento = precio_neto * (1 - descuento);
+            const form_precio_bruto = precio_descuento * utilidad;
 
             const precio_final = form_precio_bruto.toLocaleString('en-US', { style: 'currency', currency: 'MXN' });
 
             document.querySelector('#resultado_final').textContent = precio_final;
         });
+
+        // Trigger the change event on page load to set the initial state
+        document.querySelector('#moneda').dispatchEvent(new Event('change'));
     </script>
 </body>
 </html>
